@@ -1,17 +1,18 @@
 
-import user from "../models/user.model.js";
+import User from "../models/user.model.js";
 import AppError from "../utils/error.util.js";
 import cloudinary from 'cloudinary';
 import fs from 'fs/promises';
 import sendEmail from "../utils/sendEmail.js";
-import crypto from 'crypto'
+import crypto from 'crypto';
+import asyncHandler from "../middlewares/asyncHandler.middleware.js";
 
 const cookieOptions = {
   maxAge: 7 * 24 * 60 * 60 * 1000,  //set cookie for 7 days
-  httpOnly:true,
-  secure: true
+  // httpOnly:true,
+  // secure: true
 }
-const register = async (req, res, next)=>{
+const register =  asyncHandler(async (req, res, next)=>{
 const {fullname, email, password } = req.body;
 console.log(req.body)
 
@@ -19,12 +20,12 @@ if(!fullname || !email || !password){
 return next(new AppError('All fields are required', 400));  //next ke through app.js me jake middleware execute krega
 }
 
-const userExists = await user.findOne({email});
+const userExists = await User.findOne({email});
 if(userExists){
   return next(new AppError('Email already exists', 409));
 }
 
-const User = await user.create({
+const newUser = await User.create({
   fullname,
   email,
   password,
@@ -35,30 +36,32 @@ const User = await user.create({
 
 })
 
-console.log(User)
-if(!User){
+// console.log(User)
+if(!newUser){
   return next(new AppError('User registration failed, try again later', 400)); 
 }
 
 
 
-//TO DO: File upload
-console.log('file details>',JSON.stringify(req.file));
+// TO DO: File upload
+// console.log('file details>',JSON.stringify(req.file));
 if(req.file){
  
 try{
 const result = await cloudinary.v2.uploader.upload(req.file.path,{  //kisi v ek jgh se dusre jgh file upload krne me help krta h
   folder:'lms',
-  width:'250',
+  width:'50',
   height:'250',
   gravity:'faces',
   crop:'fill'
   
 });
 
+console.log(result)
+
 if(result){
-  user.avatar.public_id =  result.public_id;
-  user.avatar.secure_url = result.secure_url;
+  newUser.avatar.public_id =  result.public_id;
+  newUser.avatar.secure_url = result.secure_url;
 
   //Remove file from server
 
@@ -73,30 +76,33 @@ return next(new AppError(Error || 'file not uploaded, please try again later', 5
 
 
 
-await user.save();
+await newUser.save();
 
-user.password = undefined; //password nhi send krna h user ka info me
+const token = await newUser.generateJWTToken();
+console.log(" ab")
+console.log(token)
+newUser.password = undefined; //password nhi send krna h user ka info me
 
 // AB register krne k bad user ko login karaao
+// console.log(user.generateJWTToken)
 
-const token = await user.generateJWTToken();
 
 //ab encrypted password ko cookie me save kr dete h
 
 res.cookie('token', token, cookieOptions) //taki dobara login manually na krna pade
 
-res.send(201).json({
+res.status(200).json({
   success: true,
   message:'User registered successfully',
-  user, // send kr diye user ka info
+  newUser, // send kr diye user ka info
 });
 
 
-}
+})
 
 
 
-const login = async (req,res, next)=>{
+const login = asyncHandler( async (req,res, next)=>{
 
   try{
 
@@ -105,46 +111,47 @@ const login = async (req,res, next)=>{
     return next(new AppError('All fields are required', 400));
     }
   
-    const user = await user.findOne({
+    const newUser = await User.findOne({
       email
     }).select('+password'); // agr user milta h to password v de dena
   
-    if(!user || !user.comparePassword(password)){
+    if(!(newUser && ( await newUser.comparePassword(password)))){
     return next(new AppError('Email or password does not match', 400));
     }
   
-    const token = await user.generateJWTToken();
-    user.password = undefined;
+    const token = await newUser.generateJWTToken();
+    newUser.password = undefined;
   
     res.cookie('token', token, cookieOptions);
   
     res.status(200).json({
       success: true,
-      message:'user loggedin successfully',
-      user,
+      message:'user logged In successfully',
+      newUser,
     })
   }catch(e){
     return next(new AppError(e.message, 500));
   }
 
-}
+})
 
 
 
 
-const logout = (req, res)=>{  //logout krne k liye cookie hi delete kr do
+const logout = asyncHandler(async (req, res)=>{  //logout krne k liye cookie hi delete kr do
   res.cookie('token', null,{
-  secure:true,
+  secure: true,
   maxAge:0,
   httponly:true
   });
 
   res.status(200).json({
+    
     success: true,
     message:'User logged out successfully'
 
   })
-}
+})
 
 const getProfile = async (req, res)=>{
 
@@ -158,7 +165,7 @@ const getProfile = async (req, res)=>{
       user
     });
   }catch(e){
-  return next(new AppError('Failed tofetch user details', 500));
+  return next(new AppError('Failed to fetch user details', 500));
   }
  
 }

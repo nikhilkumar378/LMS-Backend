@@ -2,23 +2,24 @@ import Course from "../models/course.model.js"
 import AppError from "../utils/error.util.js";
 import fs from 'fs/promises';
 import cloudinary from 'cloudinary'
+import asyncHandler from "../middlewares/asyncHandler.middleware.js";
 
 
-const getAllCourses = async (req, res, next)=>{
+const getAllCourses = asyncHandler(async(req, res, next)=>{
 
   try{
     const courses = await Course.find({}).select('-lectures');
-    
+    console.log(courses)
     res.status(200).json({
       success:true,
       message: 'All courses',
       courses
-    });
+});
 
   }catch(e){
    return next(new AppError(e.message, 500));
   }
-}
+})
 
 
 
@@ -67,8 +68,8 @@ if(req.file){
     });
   
     if(result){  //agr upload ho jata h to 
-      course.thumbnail.public_id = result.public_id;
-      course.thumbnail.secure_url = result.secure_url;
+      course.thumbnails.public_id = result.public_id;
+      course.thumbnails.secure_url = result.secure_url;
     }
   
     fs.rm(`uploads/${req.file.filename}`);

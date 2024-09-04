@@ -5,7 +5,7 @@ import crypto from 'crypto';
 
 const userSchema = new Schema({
 
-  username:{
+  fullname:{
     type:'String',
     required:[true, 'Name is required'],
     minLength:[5, 'Name must be atleast 5 char'],
@@ -62,11 +62,11 @@ this.password = await bcrypt.hash(this.password, 10);  //upr bcrypt import krlet
 //JWT token 
 
 userSchema.methods = {
-  generateJWToken: async function(){
+  generateJWTToken: async function(){
     return await jwt.sign(
       {id: this._id, email: this.email, subscription: this.subscription, role: this.role},
-      process.env.JWT_SECRET,
-      {expiresIn: process.env.JWT_EXPIRY}
+      "secret123",
+      {expiresIn:"1d"}
      
     )
   },
@@ -96,5 +96,5 @@ userSchema.methods = {
   
 
 
-const user = model('user', userSchema)
-export default user;
+const User = model('user', userSchema)
+export default User;

@@ -10,10 +10,18 @@ import errorMiddleware from './middlewares/error.middleware.js';
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true}));
- app.use(cors({
-  origin:["http://localhost:5173"],
-  credentials:true
- }));
+//  app.use(cors({
+//   // origin:["http://localhost:5173"],
+//   // methods: ['DELETE'],
+ 
+//   credentials:true
+//  }));
+
+app.use(cors({credentials: true, origin: 'http://localhost:5173'}));
+
+
+
+// "http://localhost:5173"//
 
  app.use(cookieparser());
 
@@ -23,7 +31,10 @@ app.use(express.urlencoded({ extended: true}));
   res.send('/pong')
  });
 
+ 
  app.use('/api/v1/user', userRoutes);   // yaha tak nhi exxecute hua to aap neeche jao middleware me phir kuch locha hua hoga waha
+ 
+ 
  app.use('/api/v1/courses', courseRoutes);
   
 

@@ -1,6 +1,6 @@
 NODE_ENV = development
 
-PORT = 4000
+PORT = 8000
 
 MONGO_URI = mongodb://127.0.0.1:27017/lms
 
