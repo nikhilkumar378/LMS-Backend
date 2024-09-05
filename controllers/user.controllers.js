@@ -45,32 +45,32 @@ if(!newUser){
 
 // TO DO: File upload
 // console.log('file details>',JSON.stringify(req.file));
-if(req.file){
+// if(req.file){
  
-try{
-const result = await cloudinary.v2.uploader.upload(req.file.path,{  //kisi v ek jgh se dusre jgh file upload krne me help krta h
-  folder:'lms',
-  width:'50',
-  height:'250',
-  gravity:'faces',
-  crop:'fill'
+// try{
+// const result = await cloudinary.v2.uploader.upload(req.file.path,{  //kisi v ek jgh se dusre jgh file upload krne me help krta h
+//   folder:'lms',
+//   width:'50',
+//   height:'250',
+//   gravity:'faces',
+//   crop:'fill'
   
-});
+// });
 
-console.log(result)
+// console.log(result)
 
-if(result){
-  newUser.avatar.public_id =  result.public_id;
-  newUser.avatar.secure_url = result.secure_url;
+// if(result){
+//   newUser.avatar.public_id =  result.public_id;
+//   newUser.avatar.secure_url = result.secure_url;
 
-  //Remove file from server
+//   //Remove file from server
 
-  fs.rm(`uploads/${req.file.filename}`)
-}
-}catch(e){
-return next(new AppError(Error || 'file not uploaded, please try again later', 500));
-}
-}
+//   fs.rm(`uploads/${req.file.filename}`)
+// }
+// }catch(e){
+// return next(new AppError(Error || 'file not uploaded, please try again later', 500));
+// }
+// }
 
 
 
@@ -79,8 +79,8 @@ return next(new AppError(Error || 'file not uploaded, please try again later', 5
 await newUser.save();
 
 const token = await newUser.generateJWTToken();
-console.log(" ab")
-console.log(token)
+// console.log(" ab")
+// console.log(token)
 newUser.password = undefined; //password nhi send krna h user ka info me
 
 // AB register krne k bad user ko login karaao
